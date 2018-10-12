@@ -27,9 +27,10 @@
 
 void md5_check(char *hash, char *file){
     unsigned char c[MD5_DIGEST_LENGTH];
-    
+    char *file1 = "hash.c";
+    printf("filename in hash: %s\n", file); 
     int i;
-    FILE *inFile = fopen(file, "rb");
+    FILE *inFile = fopen(file1, "rb");
     MD5_CTX mdContext;
     int bytes;
     unsigned char data[1024];
@@ -157,9 +158,11 @@ void *client(char *file, int port, char *server_ip){
 }
 
 int main(int argc, char *argv[]){
-    char filename[32];
+    char filename[256];
+    char *file;
     char port_ascii[6];
     int port;
+    int c;
     char *hash;
     int command, hostname;
     char *IPbuf;
@@ -177,6 +180,7 @@ int main(int argc, char *argv[]){
         command = getchar();
         switch(command){
             case 's':
+                while((c = getchar()) != '\n' && c != EOF);
                 hostname = gethostname(hostbuffer, sizeof(hostbuffer));
                 if (hostname == -1)
                     DIE("ERROR: Could Not get hostname");
@@ -190,7 +194,7 @@ int main(int argc, char *argv[]){
 
                 printf("enter a filename:");
                 fflush(stdin);
-                fgets(filename, 32, stdin);
+                fgets(filename, sizeof(filename), stdin);
                 printf("\n");
                 
                 printf("enter a port: ");
@@ -203,11 +207,17 @@ int main(int argc, char *argv[]){
                 server(filename, port, IPbuf); 
                 break;
             case 'h':
-                printf("enter a filename:");
+
+                while((c = getchar()) != '\n' && c != EOF);
+
                 fflush(stdin);
-                fgets(filename, 32, stdin);
-                printf("\n"); 
-                md5_check(hash, filename);
+
+                printf("enter a filename: ");
+                fgets(filename, sizeof(filename), stdin);
+                printf("filename: %s\n", filename);
+                printf("\n");
+                
+                md5_check(hash, &filename);
                 printf("Computed MD5 hash is: %s \n", hash);
                 break;
             default:
