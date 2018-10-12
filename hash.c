@@ -157,12 +157,13 @@ void *client(char *file, int port, char *server_ip){
 }
 
 int main(int argc, char *argv[]){
-    char *filename;
-    char *port;
+    char filename[32];
+    char port_ascii[6];
+    int port;
     char *hash;
     int command, hostname;
     char *IPbuf;
-    char *hostbuffer;
+    char hostbuffer[256];
     struct hostent *host_entry;
 
     printf(RED"\n\n----------------pick an option----------------\n"RESET);
@@ -187,16 +188,31 @@ int main(int argc, char *argv[]){
                 IPbuf = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
                 printf("using IP: %s\n", IPbuf);
 
-                printf("enter a filename: ");
-                fgets(filename, 30, stdin);
+                printf("enter a filename:");
+                fflush(stdin);
+                fgets(filename, 32, stdin);
                 printf("\n");
                 
                 printf("enter a port: ");
-                fgets(port, 6, stdin);
+                fflush(stdin);
+                fgets(port_ascii, 6, stdin);
+                port = atoi(port_ascii);
                 printf("\n");
-
-                printf("starting server on socket %s:%s \n", IPbuf, port);
+                
+                printf("starting server on socket %s:%d \n", IPbuf, port);
                 server(filename, port, IPbuf); 
+                break;
+            case 'h':
+                printf("enter a filename:");
+                fflush(stdin);
+                fgets(filename, 32, stdin);
+                printf("\n"); 
+                md5_check(hash, filename);
+                printf("Computed MD5 hash is: %s \n", hash);
+                break;
+            default:
+                printf("invalid input entered, learn to read \n");
+                continue;
         }
     } while(1);
 
