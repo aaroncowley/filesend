@@ -27,10 +27,9 @@
 
 void md5_check(char *hash, char *file){
     unsigned char c[MD5_DIGEST_LENGTH];
-    char *file1 = "hash.c";
-    printf("filename in hash: %s\n", file); 
+    printf("filename in hash:%s\n", file); 
     int i;
-    FILE *inFile = fopen(file1, "rb");
+    FILE *inFile = fopen(file, "rb");
     MD5_CTX mdContext;
     int bytes;
     unsigned char data[1024];
@@ -39,14 +38,14 @@ void md5_check(char *hash, char *file){
         DIE("ERROR: file cannot be opened for hashing");
 
     MD5_Init(&mdContext);
-    while ((bytes = fread(data, 1, 1024, inFile)) != 0)
+    while ((bytes = fread(data, 1, sizeof(data), inFile)) != 0)
         MD5_Update (&mdContext, data, bytes);
     
     MD5_Final(c, &mdContext);
     for(i = 0; i < MD5_DIGEST_LENGTH; i++){
         sprintf(&hash[i*2], "%02x", (unsigned int)c[i]);
     }
-
+    printf("made it here\n");
     fclose(inFile); 
 }
 
@@ -159,8 +158,7 @@ void *client(char *file, int port, char *server_ip){
 
 int main(int argc, char *argv[]){
     char filename[256];
-    char *file;
-    char port_ascii[6];
+    char port_ascii[8];
     int port;
     int c;
     char *hash;
@@ -168,19 +166,20 @@ int main(int argc, char *argv[]){
     char *IPbuf;
     char hostbuffer[256];
     struct hostent *host_entry;
-
-    printf(RED"\n\n----------------pick an option----------------\n"RESET);
-    printf(CYAN"option s: send a file\n"RESET);
-    printf(CYAN"option h: hash a file\n"RESET);
-    printf(CYAN"option r: receive a file\n"RESET);
-    printf(RED"----------------------------------------------\n\n"RESET);
-
     do {
+        printf(RED"\n\n----------------pick an option----------------\n"RESET);
+        printf(CYAN"option s: send a file\n"RESET);
+        printf(CYAN"option h: hash a file\n"RESET);
+        printf(CYAN"option r: receive a file\n"RESET);
+        printf(RED"----------------------------------------------\n\n"RESET);
+
         printf(GREEN"Enter your Command >>> "RESET);
         command = getchar();
         switch(command){
             case 's':
                 while((c = getchar()) != '\n' && c != EOF);
+                fflush(stdin);
+
                 hostname = gethostname(hostbuffer, sizeof(hostbuffer));
                 if (hostname == -1)
                     DIE("ERROR: Could Not get hostname");
@@ -188,7 +187,6 @@ int main(int argc, char *argv[]){
                 host_entry = gethostbyname(hostbuffer);
                 if (host_entry == -1)
                     DIE("ERROR: Could not retrieve host info");
-                
                 IPbuf = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
                 printf("using IP: %s\n", IPbuf);
 
@@ -199,27 +197,33 @@ int main(int argc, char *argv[]){
                 
                 printf("enter a port: ");
                 fflush(stdin);
-                fgets(port_ascii, 6, stdin);
+                fgets(port_ascii, sizeof(port_ascii), stdin);
                 port = atoi(port_ascii);
                 printf("\n");
                 
                 printf("starting server on socket %s:%d \n", IPbuf, port);
                 server(filename, port, IPbuf); 
                 break;
+
             case 'h':
-
                 while((c = getchar()) != '\n' && c != EOF);
-
                 fflush(stdin);
 
                 printf("enter a filename: ");
                 fgets(filename, sizeof(filename), stdin);
-                printf("filename: %s\n", filename);
+                strtok(filename, "\n");
                 printf("\n");
                 
-                md5_check(hash, &filename);
+                md5_check(hash, filename);
                 printf("Computed MD5 hash is: %s \n", hash);
                 break;
+
+            case 'r':
+                while((c = getchar()) != '\n' && c != EOF);
+                fflush(stdin);
+                printf("adding functionality.......\n");
+                break;
+
             default:
                 printf("invalid input entered, learn to read \n");
                 continue;
